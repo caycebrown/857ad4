@@ -7,6 +7,7 @@ from api.dependencies.auth import get_current_user
 from api.core.constants import DEFAULT_PAGE, DEFAULT_PAGE_SIZE
 from api.crud import ProspectCrud
 from api.dependencies.db import get_db
+import csv
 
 router = APIRouter(prefix="/api", tags=["prospects"])
 
@@ -31,9 +32,10 @@ def get_prospects_page(
 @router.post("/prospects_files/import")
 async def post_prospects_file(
     current_user: schemas.User = Depends(get_current_user),
-    db: Session = Depends(get_db), 
-    content_type = Header("multipart/form-data"),
-    form_data: schemas.ProspectFilesUpload = Depends(schemas.ProspectFilesUpload.to_form),
+    db: Session = Depends(get_db),
+    content_type=Header("multipart/form-data"),
+    form_data: schemas.ProspectFilesUpload = Depends(
+        schemas.ProspectFilesUpload.to_form
+    ),
 ):
     """Upload csv file + file mapping data"""
-

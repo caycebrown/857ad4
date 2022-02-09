@@ -6,6 +6,7 @@ from pydantic.networks import EmailStr
 
 from fastapi import Form, File, UploadFile
 
+
 class Prospect(BaseModel):
     id: int
     email: EmailStr
@@ -31,6 +32,7 @@ class ProspectResponse(BaseModel):
     size: int
     total: int
 
+
 class ProspectFilesUpload(BaseModel):
     file: UploadFile
     email_index: int
@@ -55,8 +57,9 @@ class ProspectFilesUpload(BaseModel):
             first_name_index=first_name_index,
             last_name_index=last_name_index,
             force=force,
-            has_headers=has_headers
+            has_headers=has_headers,
         )
+
 
 class ProspectFilesResponse(BaseModel):
     response: int
