@@ -39,3 +39,23 @@ async def post_prospects_file(
     ),
 ):
     """Upload csv file + file mapping data"""
+
+    wrapper = io.TextIOWrapper(form_data.file.file._file, encoding="UTF-8")
+    reader = csv.reader(wrapper, delimiter=",")
+    current_prospects = ProspectCrud.get_prospect_emails(db, 1)
+
+    if form_data.has_headers:
+        next(reader)
+
+    for row in reader:
+        data = {
+            "email": row[form_data.email_index],
+            "first_name": row[form_data.first_name_index],
+            "last_name": row[form_data.last_name_index],
+        }
+
+        if row[form_data.email_index] in current_prospects and form_data.force:
+            """new prospect update method will go here"""
+        else:
+            add_prospect = ProspectCrud.create_prospect(db, 1, data)
+    return {"data": "test"}
