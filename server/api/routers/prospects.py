@@ -55,7 +55,8 @@ async def post_prospects_file(
         }
 
         if row[form_data.email_index] in current_prospects and form_data.force:
-            """new prospect update method will go here"""
+            update_prospect = ProspectCrud.update_existing_prospect(db, 1, data)
+            print(update_prospect)
         else:
             add_prospect = ProspectCrud.create_prospect(db, 1, data)
     return {"data": "test"}
