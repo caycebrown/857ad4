@@ -5,7 +5,7 @@ from sqlalchemy.orm.session import Session
 from api import schemas
 from api.dependencies.auth import get_current_user
 from api.core.constants import DEFAULT_PAGE, DEFAULT_PAGE_SIZE
-from api.crud import ProspectCrud
+from api.crud import ProspectCrud, UploadCrud
 from api.dependencies.db import get_db
 import csv
 
@@ -39,19 +39,27 @@ async def post_prospects_file(
     ),
 ):
     """Upload csv file + file mapping data"""
-
     wrapper = io.TextIOWrapper(form_data.file.file._file, encoding="UTF-8")
     reader = csv.reader(wrapper, delimiter=",")
+    csv_data = list(reader)
+
+    upload_file_data = UploadCrud.create_upload_data(db, 1, 
+        {
+            "file_name": form_data.file.filename,
+            "number_of_rows": len(csv_data)
+        })
+
     current_prospects = ProspectCrud.get_prospect_emails(db, 1)
 
     if form_data.has_headers:
         next(reader)
 
-    for row in reader:
+    for row in csv_data:
         data = {
             "email": row[form_data.email_index],
             "first_name": row[form_data.first_name_index],
             "last_name": row[form_data.last_name_index],
+            "upload_id": upload_file_data.id
         }
 
         if row[form_data.email_index] in current_prospects and form_data.force:

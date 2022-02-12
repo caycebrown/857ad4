@@ -53,6 +53,7 @@ class ProspectCrud:
                 {
                     "first_name": data["first_name"],
                     "last_name": data["last_name"],
+                    "upload_id": data["upload_id"],
                     "updated_at": datetime.now(),
                 }
             )
