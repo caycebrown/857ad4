@@ -13,6 +13,7 @@ class Upload(BaseModel):
     class Config:
         orm_mode = True
 
+
 class UploadCreate(BaseModel):
     file_name: str
     number_of_rows: int

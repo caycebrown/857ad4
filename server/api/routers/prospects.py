@@ -1,6 +1,6 @@
 from black import io
-from fastapi import APIRouter, HTTPException, status, Depends, Header
-from sqlalchemy import true
+from fastapi import APIRouter, BackgroundTasks, HTTPException, status, Depends, Header
+from sqlalchemy import schema, true
 from sqlalchemy.orm.session import Session
 from api import schemas
 from api.dependencies.auth import get_current_user
@@ -30,41 +30,77 @@ def get_prospects_page(
 
 
 @router.post("/prospects_files/import")
-async def post_prospects_file(
+def post_prospects_file(
+    *,
     current_user: schemas.User = Depends(get_current_user),
     db: Session = Depends(get_db),
     content_type=Header("multipart/form-data"),
     form_data: schemas.ProspectFilesUpload = Depends(
         schemas.ProspectFilesUpload.to_form
     ),
+    background_task: BackgroundTasks,
 ):
     """Upload csv file + file mapping data"""
-    wrapper = io.TextIOWrapper(form_data.file.file._file, encoding="UTF-8")
-    reader = csv.reader(wrapper, delimiter=",")
-    csv_data = list(reader)
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Please log in"
+        )
 
-    upload_file_data = UploadCrud.create_upload_data(db, 1, 
-        {
-            "file_name": form_data.file.filename,
-            "number_of_rows": len(csv_data)
-        })
+    def upload_data():
+        wrapper = io.TextIOWrapper(form_data.file.file._file, encoding="UTF-8")
+        reader = csv.reader(wrapper, delimiter=",")
+        csv_data = list(reader)
 
-    current_prospects = ProspectCrud.get_prospect_emails(db, 1)
+        with open(
+            "./uploaded_files/" + form_data.file.filename, "w", newline=""
+        ) as saved_file:
+            writer = csv.writer(saved_file)
+            writer.writerows(csv_data)
+            saved_file.close()
 
-    if form_data.has_headers:
-        next(reader)
+        upload_file_data = UploadCrud.create_upload_data(
+            db,
+            current_user.id,
+            {"file_name": form_data.file.filename, "number_of_rows": len(csv_data)},
+        )
 
-    for row in csv_data:
-        data = {
-            "email": row[form_data.email_index],
-            "first_name": row[form_data.first_name_index],
-            "last_name": row[form_data.last_name_index],
-            "upload_id": upload_file_data.id
-        }
+        current_prospects = ProspectCrud.get_prospect_emails(db, current_user.id)
 
-        if row[form_data.email_index] in current_prospects and form_data.force:
-            update_prospect = ProspectCrud.update_existing_prospect(db, 1, data)
-            print(update_prospect)
-        else:
-            add_prospect = ProspectCrud.create_prospect(db, 1, data)
-    return {"data": "test"}
+        if form_data.has_headers:
+            next(reader)
+
+        for row in csv_data:
+            data = {
+                "email": row[form_data.email_index],
+                "first_name": row[form_data.first_name_index],
+                "last_name": row[form_data.last_name_index],
+                "upload_id": upload_file_data.id,
+            }
+
+            if row[form_data.email_index] in current_prospects and form_data.force:
+                update_prospect = ProspectCrud.update_existing_prospect(
+                    db, current_user.id, data
+                )
+
+            else:
+                add_prospect = ProspectCrud.create_prospect(db, current_user.id, data)
+
+    background_task.add_task(upload_data)
+
+    return {"message": "upload started", "status": status.HTTP_200_OK}
+
+
+@router.get("/prospects_files/{upload_id}/progress}")
+def upload_progress(
+    upload_id: int,
+    current_user: schemas.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Gets the current number of prospects uploaded from a specified file"""
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Please log in"
+        )
+    progress = UploadCrud.get_upload_status(upload_id, db, current_user.id)
+    total = UploadCrud.get_file_row_count(upload_id, db, current_user.id)
+    return {"total uploaded": progress, "total in file": total}

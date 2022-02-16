@@ -18,7 +18,7 @@ if __name__ == "__main__":
             Campaign.__table__,
             Prospect.__table__,
             User.__table__,
-            Upload.__table__
+            Upload.__table__,
         ]
         print("\n-- Dropping All Tables --")
         for t in ordered_drop:
