@@ -64,3 +64,7 @@ class ProspectFilesUpload(BaseModel):
 
 class ProspectFilesResponse(BaseModel):
     message: str
+
+class ProspectProgressResponse(BaseModel):
+    total_uploaded: int
+    total_in_file: int

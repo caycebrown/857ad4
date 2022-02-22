@@ -42,17 +42,17 @@ async def post_prospects_file(
     background_task: BackgroundTasks,
 ):
     """Upload csv file + file mapping data"""
-    """if not current_user:
+    if not current_user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Please log in"
-        )"""
+        )
 
     background_task.add_task(upload_data, form_data, db, current_user)
 
     return {"message": "upload started"}
 
 
-@router.get("/prospects_files/{upload_id}/progress}")
+@router.get("/prospects_files/{upload_id}/progress}", response_model=schemas.ProspectProgressResponse)
 def upload_progress(
     upload_id: int,
     current_user: schemas.User = Depends(get_current_user),
@@ -63,6 +63,12 @@ def upload_progress(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Please log in"
         )
-    progress = UploadCrud.get_upload_status(upload_id, db, current_user.id)
-    total = UploadCrud.get_file_row_count(upload_id, db, current_user.id)
+    try:
+        progress = UploadCrud.get_upload_status(upload_id, db, current_user.id)
+        total = UploadCrud.get_file_row_count(upload_id, db, current_user.id)
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Upload with id {upload_id} does not exist"
+        )
+
     return {"total uploaded": progress, "total in file": total}

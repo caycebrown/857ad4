@@ -1,4 +1,3 @@
-from pickle import FALSE
 from black import io
 from sqlalchemy import null
 from api.crud import ProspectCrud, UploadCrud
@@ -13,7 +12,7 @@ def upload_data(form_data, db, current_user):
     csv_data = list(reader)
 
     with open(
-        "./uploaded_files/" + form_data.file.filename + "1", "w", newline=""
+        "./uploaded_files/" + form_data.file.filename + "current_user.id", "w", newline=""
     ) as saved_file:
         writer = csv.writer(saved_file)
         writer.writerows(csv_data)
@@ -21,7 +20,7 @@ def upload_data(form_data, db, current_user):
 
     upload_file_data = UploadCrud.create_upload_data(
         db,
-        1,
+        current_user.id,
         {"file_name": form_data.file.filename, "number_of_rows": len(csv_data)},
     )
 
@@ -51,11 +50,11 @@ def upload_data(form_data, db, current_user):
         except EmailNotValidError as error:
             print(str(error))
 
-        if valid_email.email == FALSE:
+        if not valid_email.email:
             return
         elif exists and form_data.force:
-            update_prospect = ProspectCrud.update_existing_prospect(db, 1, data)
+            update_prospect = ProspectCrud.update_existing_prospect(db, current_user.id, data)
         elif exists:
-            """Skip Propsect - Do Nothing"""
+            """Skip Prospect - Do Nothing"""
         else:
-            add_prospect = ProspectCrud.create_prospect(db, 1, data)
+            add_prospect = ProspectCrud.create_prospect(db, current_user.id, data)

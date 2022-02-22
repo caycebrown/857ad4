@@ -26,7 +26,7 @@ class UploadCrud:
         user_id: int,
     ):
         """Get Upload Status"""
-        status = db.query(Prospect).filter(Prospect.upload_id == upload_id).count()
+        status = db.query(Prospect).filter(Prospect.upload_id == upload_id, Prospect.user_id == user_id).count()
         return status
 
     @classmethod
@@ -34,7 +34,7 @@ class UploadCrud:
         """Get total number of rows in uploaded file"""
         total = (
             db.query(Upload)
-            .filter(Upload.id == upload_id, user_id == user_id)
+            .filter(Upload.id == upload_id, Upload.user_id == user_id)
             .first()
             .number_of_rows
         )
