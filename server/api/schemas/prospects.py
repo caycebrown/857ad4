@@ -35,11 +35,7 @@ class ProspectResponse(BaseModel):
 
 class ProspectFilesUpload(BaseModel):
     file: UploadFile
-    email_index: int
-    first_name_index: Optional[int]
-    last_name_index: Optional[int]
-    force: bool
-    has_headers: bool
+    
 
     @classmethod
     def to_form(
@@ -62,4 +58,8 @@ class ProspectFilesUpload(BaseModel):
 
 
 class ProspectFilesResponse(BaseModel):
-    response: int
+    email_index: int
+    first_name_index: Optional[int]
+    last_name_index: Optional[int]
+    force: bool
+    has_headers: bool

@@ -29,7 +29,7 @@ def get_prospects_page(
     return {"prospects": prospects, "size": len(prospects), "total": total}
 
 
-@router.post("/prospects_files/import")
+@router.post("/prospects_files/import", response_model=schemas.ProspectFilesResponse)
 def post_prospects_file(
     *,
     current_user: schemas.User = Depends(get_current_user),
