@@ -46,9 +46,9 @@ async def post_prospects_file(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Please log in"
         )"""
-    
+
     background_task.add_task(upload_data, form_data, db, current_user)
-    
+
     return {"message": "upload started"}
 
 

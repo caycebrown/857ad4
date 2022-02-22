@@ -32,5 +32,10 @@ class UploadCrud:
     @classmethod
     def get_file_row_count(cls, upload_id: int, db: Session, user_id: int):
         """Get total number of rows in uploaded file"""
-        total = db.query(Upload).filter(Upload.id == upload_id).first().number_of_rows
+        total = (
+            db.query(Upload)
+            .filter(Upload.id == upload_id, user_id == user_id)
+            .first()
+            .number_of_rows
+        )
         return total
