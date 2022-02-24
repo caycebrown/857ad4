@@ -12,7 +12,9 @@ def upload_data(form_data, db, current_user):
     csv_data = list(reader)
 
     with open(
-        "./uploaded_files/" + form_data.file.filename + "current_user.id", "w", newline=""
+        "./uploaded_files/" + form_data.file.filename + "{current_user.id}",
+        "w",
+        newline="",
     ) as saved_file:
         writer = csv.writer(saved_file)
         writer.writerows(csv_data)
@@ -28,33 +30,43 @@ def upload_data(form_data, db, current_user):
         next(reader)
 
     for row in csv_data:
+
+        try:
+            first_name = row[form_data.first_name_index]
+        except IndexError:
+            first_name = ""
+        try:
+            last_name = row[form_data.last_name_index]
+        except IndexError:
+            last_name = ""
+
         data = {
             "email": row[form_data.email_index],
-            "first_name": row[form_data.first_name_index]
-            if row[form_data.first_name_index]
-            else null,
-            "last_name": row[form_data.last_name_index]
-            if row[form_data.last_name_index]
-            else null,
+            "first_name": first_name,
+            "last_name": last_name,
             "upload_id": upload_file_data.id,
         }
 
         exists = (
             db.query(Prospect)
-            .filter(Prospect.email == row[form_data.email_index])
+            .filter(
+                Prospect.email == row[form_data.email_index],
+                Prospect.user_id == current_user.id,
+            )
             .first()
         )
 
         try:
             valid_email = validate_email(row[form_data.email_index])
         except EmailNotValidError as error:
-            print(str(error))
+            continue
 
         if not valid_email.email:
-            return
-        elif exists and form_data.force:
-            update_prospect = ProspectCrud.update_existing_prospect(db, current_user.id, data)
+            continue
         elif exists:
-            """Skip Prospect - Do Nothing"""
+            if form_data.force:
+                update_prospect = ProspectCrud.update_existing_prospect(
+                    db, current_user.id, data
+                )
         else:
             add_prospect = ProspectCrud.create_prospect(db, current_user.id, data)

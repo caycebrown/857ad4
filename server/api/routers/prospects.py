@@ -52,7 +52,10 @@ async def post_prospects_file(
     return {"message": "upload started"}
 
 
-@router.get("/prospects_files/{upload_id}/progress}", response_model=schemas.ProspectProgressResponse)
+@router.get(
+    "/prospects_files/{upload_id}/progress}",
+    response_model=schemas.ProspectProgressResponse,
+)
 def upload_progress(
     upload_id: int,
     current_user: schemas.User = Depends(get_current_user),
@@ -63,12 +66,16 @@ def upload_progress(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Please log in"
         )
-    try:
-        progress = UploadCrud.get_upload_status(upload_id, db, current_user.id)
-        total = UploadCrud.get_file_row_count(upload_id, db, current_user.id)
-    except:
+
+    upload_file = UploadCrud.get_by_id(db, upload_id)
+
+    if not upload_file:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"Upload with id {upload_id} does not exist"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Upload with id {upload_id} does not exist",
         )
 
-    return {"total uploaded": progress, "total in file": total}
+    progress = UploadCrud.get_upload_status(upload_id, db, 1)
+    total = UploadCrud.get_file_row_count(upload_id, db, 1)
+
+    return {"total_uploaded": progress, "total_in_file": total}

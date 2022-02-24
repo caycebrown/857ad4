@@ -26,7 +26,11 @@ class UploadCrud:
         user_id: int,
     ):
         """Get Upload Status"""
-        status = db.query(Prospect).filter(Prospect.upload_id == upload_id, Prospect.user_id == user_id).count()
+        status = (
+            db.query(Prospect)
+            .filter(Prospect.upload_id == upload_id, Prospect.user_id == user_id)
+            .count()
+        )
         return status
 
     @classmethod
@@ -39,3 +43,8 @@ class UploadCrud:
             .number_of_rows
         )
         return total
+
+    @classmethod
+    def get_by_id(cls, db: Session, upload_id: int):
+        """Get a single upload file by id"""
+        return db.query(Upload).filter(Upload.id == upload_id).one_or_none()
