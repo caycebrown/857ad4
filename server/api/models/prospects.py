@@ -16,8 +16,12 @@ class Prospect(Base):
     first_name = Column(String, index=True, nullable=False)
     last_name = Column(String, index=True, nullable=False)
     user_id = Column(BigInteger, ForeignKey("users.id"), primary_key=True)
+    upload_id = Column(BigInteger, ForeignKey("uploads.id"), nullable=True)
 
     user = relationship("User", back_populates="prospects", foreign_keys=[user_id])
+    uploads = relationship(
+        "Upload", back_populates="prospects", foreign_keys=[upload_id]
+    )
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now())

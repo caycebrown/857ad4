@@ -3,6 +3,7 @@ from sqlalchemy.orm.session import Session
 from api import schemas
 from api.models import Prospect
 from api.core.constants import DEFAULT_PAGE_SIZE, DEFAULT_PAGE, MIN_PAGE, MAX_PAGE_SIZE
+from datetime import datetime
 
 
 class ProspectCrud:
@@ -43,6 +44,24 @@ class ProspectCrud:
         return prospect
 
     @classmethod
+    def update_existing_prospect(cls, db: Session, user_id: int, data):
+        """Update existing prospect"""
+        existing_prospect = (
+            db.query(Prospect)
+            .filter(Prospect.user_id == user_id, Prospect.email == data["email"])
+            .update(
+                {
+                    "first_name": data["first_name"],
+                    "last_name": data["last_name"],
+                    "upload_id": data["upload_id"],
+                    "updated_at": datetime.now(),
+                }
+            )
+        )
+        db.commit()
+        return {"message": "prospect updated"}
+
+    @classmethod
     def validate_prospect_ids(
         cls, db: Session, user_id: int, unvalidated_prospect_ids: Set[int]
     ) -> Set[int]:
@@ -54,3 +73,12 @@ class ProspectCrud:
             .all()
         )
         return {row.id for row in res}
+
+    @classmethod
+    def get_prospect_emails(
+        cls,
+        db: Session,
+        user_id: int,
+    ):
+        emails = db.query(Prospect).filter(Prospect.user_id == user_id).all()
+        return {row.email for row in emails}
